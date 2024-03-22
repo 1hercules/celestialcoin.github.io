@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>CelestialCoin</title>
+</head>
+<body>
+    <h1>CelestialCoin</h1>
+    
+    <div id="unauthenticated_functions">
+        <h2>Register</h2>
+        <input type="text" id="regUsername" placeholder="Username">
+        <input type="password" id="regPassword" placeholder="Password">
+        <button id="registerBtn">Register</button>
+        
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button id="loginBtn">Login</button>
+    </div>
+    
+    <div id="authenticated_functions" style="display:none;">
+        <h3 id="userBalance">Your Balance: </h3><br>
+        <h2>Transfer Coins</h2>
+        <input type="text" id="receiverUsername" placeholder="Receiver Username">
+        <input type="number" id="transferAmount" placeholder="Amount">
+        <button id="transferBtn">Transfer</button>
+        
+        <h2>Check Balance</h2>
+        <input type="text" id="balanceUsername" placeholder="Username">
+        <button id="checkBalanceBtn">Check Balance</button>
+        
+        <div id="remove_user_section" style="display:none;">
+            <h2>Remove User</h2>
+            <input type="text" id="removeUsername" placeholder="Username">
+            <button id="removeUserBtn">Remove User</button>
+        </div>
+    </div>
+    
+    <script>
+        const baseURL = 'http://cioudo.pythonanywhere.com';
+        const registerBtn = document.getElementById("registerBtn");
+        const loginBtn = document.getElementById("loginBtn");
+        const transferBtn = document.getElementById("transferBtn");
+        const checkBalanceBtn = document.getElementById("checkBalanceBtn");
+        const removeUserBtn = document.getElementById("removeUserBtn");
+
+        registerBtn.addEventListener("click", register);
+        loginBtn.addEventListener("click", login);
+        transferBtn.addEventListener("click", transfer);
+        checkBalanceBtn.addEventListener("click", checkBalance);
+        removeUserBtn.addEventListener("click", removeUser);
+
+        async function fetchData(endpoint, method, bodyData) {
+            try {
+                const response = await fetch(`${baseURL}/${endpoint}`, { method, headers: { 'Content-Type': 'application/json' }, body: bodyData ? JSON.stringify(bodyData) : null });
+                if (response.ok) return await response.json();
+                const errorResponse = await response.json();
+                throw new Error(JSON.stringify(errorResponse));
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+                return null;
+            }
+        }
+        
+        let authenticated_user = '';
+        
+        function register() {
+            const username = document.getElementById("regUsername").value;
+            const password = document.getElementById("regPassword").value;
+            if (username.length < 3 || password.length < 6) {
+                alert("Username must be at least 3 characters long, and password must be at least 6 characters long.");
+                return;
+            }
+            fetchData('register', 'POST', { username, password }).then(data => { if (data) alert("User registered successfully."); });
+        }
+        
+        function login() {
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
+            fetchData('login', 'POST', { username, password }).then(data => {
+                if (data) {
+                    authenticated_user = username;
+                    alert("Login successful.");
+                    document.getElementById("unauthenticated_functions").style.display = "none";
+                    document.getElementById("authenticated_functions").style.display = "block";
+                    fetchBalance(username);
+                    if (authenticated_user === 'king') document.getElementById("remove_user_section").style.display = "block";
+                } else alert("Invalid username or password.");
+            });
+        }
+        
+        function transfer() {
+            const senderUsername = authenticated_user;
+            const receiverUsername = document.getElementById("receiverUsername").value;
+            const amount = document.getElementById("transferAmount").value;
+            if (!senderUsername || !receiverUsername || !amount || isNaN(amount) || parseInt(amount) <= 0) {
+                alert("Invalid input data.");
+                return;
+            }
+            fetchData('transfer', 'POST', { sender_username: senderUsername, receiver_username: receiverUsername, amount: parseInt(amount) }).then(data => {
+                if (data) alert("Transfer successful.");
+                else alert("Failed to transfer coins. Please try again.");
+            });
+        }
+
+        function fetchBalance(username) {
+            fetchData(`balance?username=${username}`, 'GET').then(data => {
+                if (data) document.getElementById("userBalance").innerText = `Your Balance: ${data.balance}`;
+            });
+        }
+        
+        function checkBalance() {
+            const username = document.getElementById("balanceUsername").value;
+            if (!username) {
+                alert("Username is required.");
+                return;
+            }
+            fetchData(`balance?username=${username}`, 'GET').then(data => {
+                if (data) alert(`Balance for ${username}: ${data.balance}`);
+            });
+        }
+        
+        function removeUser() {
+            if (!authenticated_user) {
+                alert("Please login to remove a user.");
+                return;
+            }
+            const removeUsername = document.getElementById("removeUsername").value;
+            if (authenticated_user === removeUsername) {
+                alert("You cannot remove yourself.");
+                return;
+            }
+            if (authenticated_user === "king") {
+                fetchData('remove_user', 'POST', { username: removeUsername }).then(data => {
+                    if (data) alert("User removed successfully.");
+                    else alert("Failed to remove user. Please try again.");
+                });
+            }
+        }
+    </script>
+</body>
+</html>
