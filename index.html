@@ -31,6 +31,11 @@
         <h2>Check Balance</h2>
         <input type="text" id="balanceUsername" placeholder="Username">
         <button id="checkBalanceBtn">Check Balance</button>
+
+        <h2>Change Password</h2>
+        <input type="password" id="oldPassword" placeholder="Old Password">
+        <input type="password" id="newPassword" placeholder="New Password">
+        <button id="changePasswordBtn">Change Password</button>
         
         <div id="remove_user_section" style="display:none;">
             <h2>Remove User</h2>
@@ -45,12 +50,14 @@
         const loginBtn = document.getElementById("loginBtn");
         const transferBtn = document.getElementById("transferBtn");
         const checkBalanceBtn = document.getElementById("checkBalanceBtn");
+        const changePasswordBtn = document.getElementById("changePasswordBtn");
         const removeUserBtn = document.getElementById("removeUserBtn");
 
         registerBtn.addEventListener("click", register);
         loginBtn.addEventListener("click", login);
         transferBtn.addEventListener("click", transfer);
         checkBalanceBtn.addEventListener("click", checkBalance);
+        changePasswordBtn.addEventListener("click", changePassword);
         removeUserBtn.addEventListener("click", removeUser);
 
         const userBalanceElement = document.getElementById("userBalance");
@@ -135,6 +142,25 @@
             fetchData(`balance?username=${username}`, 'GET').then(data => {
                 if (data) alert(`Balance for ${username}: ${data.balance}`);
             });
+        }
+        
+        async function changePassword() {
+            const oldPassword = document.getElementById("oldPassword").value;
+            const newPassword = document.getElementById("newPassword").value;
+            if (oldPassword.length < 6 || newPassword.length < 6) {
+                alert("Password must be at least 6 characters long.");
+                return;
+            }
+            try {
+                const data = await fetchData('change_password', 'POST', { username: authenticatedUser, old_password: oldPassword, new_password: newPassword });
+                if (data) {
+                    alert("Password changed successfully.");
+                } else {
+                    alert("Failed to change password. Please try again.");
+                }
+            } catch (error) {
+                alert("An error occurred. Please try again later.");
+            }
         }
         
         function removeUser() {
