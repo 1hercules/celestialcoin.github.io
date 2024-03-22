@@ -103,6 +103,8 @@
             }
             fetchData('transfer', 'POST', { sender_username: senderUsername, receiver_username: receiverUsername, amount: parseInt(amount) }).then(data => {
                 if (data) alert("Transfer successful.");
+                
+                fetchBalance(username);
                 if (data) document.getElementById("userBalance").innerText = `Your Balance: ${data.balance}`;
                 else alert("Failed to transfer coins. Please try again.");
             });
