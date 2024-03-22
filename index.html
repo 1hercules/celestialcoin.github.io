@@ -93,7 +93,7 @@
             });
         }
         
-        function transfer() {
+        async function transfer() {
             const senderUsername = authenticated_user;
             const receiverUsername = document.getElementById("receiverUsername").value;
             const amount = document.getElementById("transferAmount").value;
@@ -101,15 +101,18 @@
                 alert("Invalid input data.");
                 return;
             }
-            fetchData('transfer', 'POST', { sender_username: senderUsername, receiver_username: receiverUsername, amount: parseInt(amount) }).then(data => {
+            try {
+                const data = await fetchData('transfer', 'POST', { sender_username: senderUsername, receiver_username: receiverUsername, amount: parseInt(amount) });
                 if (data) {
                     alert("Transfer successful.");
-                    fetchBalance(authenticated_user); // Corrected to use authenticated_user
+                    await fetchBalance(authenticated_user); // Corrected to use authenticated_user
                     document.getElementById("userBalance").innerText = `Your Balance: ${data.balance}`;
                 } else {
                     alert("Failed to transfer coins. Please try again.");
                 }
-            });
+            } catch (error) {
+                alert("An error occurred. Please try again later.");
+            }
         }
 
         function fetchBalance(username) {
