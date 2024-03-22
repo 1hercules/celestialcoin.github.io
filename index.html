@@ -31,6 +31,11 @@
         <h2>Check Balance</h2>
         <input type="text" id="balanceUsername" placeholder="Username">
         <button id="checkBalanceBtn">Check Balance</button>
+
+        <h2>Change Password</h2>
+        <input type="password" id="currentPassword" placeholder="Current Password">
+        <input type="password" id="newPassword" placeholder="New Password">
+        <button id="changePasswordBtn">Change Password</button>
         
         <div id="remove_user_section" style="display:none;">
             <h2>Remove User</h2>
@@ -45,12 +50,14 @@
         const loginBtn = document.getElementById("loginBtn");
         const transferBtn = document.getElementById("transferBtn");
         const checkBalanceBtn = document.getElementById("checkBalanceBtn");
+        const changePasswordBtn = document.getElementById("changePasswordBtn");
         const removeUserBtn = document.getElementById("removeUserBtn");
 
         registerBtn.addEventListener("click", register);
         loginBtn.addEventListener("click", login);
         transferBtn.addEventListener("click", transfer);
         checkBalanceBtn.addEventListener("click", checkBalance);
+        changePasswordBtn.addEventListener("click", changePassword);
         removeUserBtn.addEventListener("click", removeUser);
 
         async function fetchData(endpoint, method, bodyData) {
@@ -140,6 +147,19 @@
                     else alert("Failed to remove user. Please try again.");
                 });
             }
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById("currentPassword").value;
+            const newPassword = document.getElementById("newPassword").value;
+            if (newPassword.length < 6) {
+                alert("New password must be at least 6 characters long.");
+                return;
+            }
+            fetchData('change_password', 'POST', { username: authenticated_user, current_password: currentPassword, new_password: newPassword }).then(data => {
+                if (data) alert("Password changed successfully.");
+                else alert("Failed to change password. Please try again.");
+            });
         }
     </script>
 </body>
