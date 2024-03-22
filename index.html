@@ -53,6 +53,13 @@
         checkBalanceBtn.addEventListener("click", checkBalance);
         removeUserBtn.addEventListener("click", removeUser);
 
+        const userBalanceElement = document.getElementById("userBalance");
+        const unauthenticatedFunctions = document.getElementById("unauthenticated_functions");
+        const authenticatedFunctions = document.getElementById("authenticated_functions");
+        const removeUserSection = document.getElementById("remove_user_section");
+
+        let authenticatedUser = '';
+
         async function fetchData(endpoint, method, bodyData) {
             try {
                 const response = await fetch(`${baseURL}/${endpoint}`, { method, headers: { 'Content-Type': 'application/json' }, body: bodyData ? JSON.stringify(bodyData) : null });
@@ -65,8 +72,6 @@
                 return null;
             }
         }
-        
-        let authenticated_user = '';
         
         function register() {
             const username = document.getElementById("regUsername").value;
@@ -83,18 +88,18 @@
             const password = document.getElementById("loginPassword").value;
             fetchData('login', 'POST', { username, password }).then(data => {
                 if (data) {
-                    authenticated_user = username;
+                    authenticatedUser = username;
                     alert("Login successful.");
-                    document.getElementById("unauthenticated_functions").style.display = "none";
-                    document.getElementById("authenticated_functions").style.display = "block";
+                    unauthenticatedFunctions.style.display = "none";
+                    authenticatedFunctions.style.display = "block";
                     fetchBalance(username);
-                    if (authenticated_user === 'king') document.getElementById("remove_user_section").style.display = "block";
+                    if (authenticatedUser === 'king') removeUserSection.style.display = "block";
                 } else alert("Invalid username or password.");
             });
         }
         
         async function transfer() {
-            const senderUsername = authenticated_user;
+            const senderUsername = authenticatedUser;
             const receiverUsername = document.getElementById("receiverUsername").value;
             const amount = document.getElementById("transferAmount").value;
             if (!senderUsername || !receiverUsername || !amount || isNaN(amount) || parseInt(amount) <= 0) {
@@ -105,8 +110,8 @@
                 const data = await fetchData('transfer', 'POST', { sender_username: senderUsername, receiver_username: receiverUsername, amount: parseInt(amount) });
                 if (data) {
                     alert("Transfer successful.");
-                    await fetchBalance(authenticated_user); // Corrected to use authenticated_user
-                    document.getElementById("userBalance").innerText = `Your Balance: ${data.balance}`;
+                    await fetchBalance(authenticatedUser);
+                    userBalanceElement.innerText = `Your Balance: ${data.balance}`;
                 } else {
                     alert("Failed to transfer coins. Please try again.");
                 }
@@ -117,7 +122,7 @@
 
         function fetchBalance(username) {
             fetchData(`balance?username=${username}`, 'GET').then(data => {
-                if (data) document.getElementById("userBalance").innerText = `Your Balance: ${data.balance}`;
+                if (data) userBalanceElement.innerText = `Your Balance: ${data.balance}`;
             });
         }
         
@@ -133,16 +138,16 @@
         }
         
         function removeUser() {
-            if (!authenticated_user) {
+            if (!authenticatedUser) {
                 alert("Please login to remove a user.");
                 return;
             }
             const removeUsername = document.getElementById("removeUsername").value;
-            if (authenticated_user === removeUsername) {
+            if (authenticatedUser === removeUsername) {
                 alert("You cannot remove yourself.");
                 return;
             }
-            if (authenticated_user === "king") {
+            if (authenticatedUser === "king") {
                 fetchData('remove_user', 'POST', { username: removeUsername }).then(data => {
                     if (data) alert("User removed successfully.");
                     else alert("Failed to remove user. Please try again.");
