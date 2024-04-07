@@ -42,6 +42,8 @@
             <input type="text" id="removeUsername" placeholder="Username">
             <button id="removeUserBtn">Remove User</button>
         </div>
+        
+        <button id="logoutBtn">Logout</button>
     </div>
     
     <script>
@@ -52,6 +54,7 @@
         const checkBalanceBtn = document.getElementById("checkBalanceBtn");
         const changePasswordBtn = document.getElementById("changePasswordBtn");
         const removeUserBtn = document.getElementById("removeUserBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
 
         registerBtn.addEventListener("click", register);
         loginBtn.addEventListener("click", login);
@@ -59,6 +62,7 @@
         checkBalanceBtn.addEventListener("click", checkBalance);
         changePasswordBtn.addEventListener("click", changePassword);
         removeUserBtn.addEventListener("click", removeUser);
+        logoutBtn.addEventListener("click", logout);
 
         const userBalanceElement = document.getElementById("userBalance");
         const unauthenticatedFunctions = document.getElementById("unauthenticated_functions");
@@ -69,7 +73,10 @@
 
         async function fetchData(endpoint, method, bodyData) {
             try {
-                const response = await fetch(`${baseURL}/${endpoint}`, { method, headers: { 'Content-Type': 'application/json' }, body: bodyData ? JSON.stringify(bodyData) : null });
+                const sessionId = sessionStorage.getItem('sessionId');
+                const headers = { 'Content-Type': 'application/json' };
+                if (sessionId) headers['Session-ID'] = sessionId;
+                const response = await fetch(`${baseURL}/${endpoint}`, { method, headers, body: bodyData ? JSON.stringify(bodyData) : null });
                 if (response.ok) return await response.json();
                 const errorResponse = await response.json();
                 throw new Error(JSON.stringify(errorResponse));
@@ -101,6 +108,7 @@
                     authenticatedFunctions.style.display = "block";
                     fetchBalance(username);
                     if (authenticatedUser === 'king') removeUserSection.style.display = "block";
+                    sessionStorage.setItem('sessionId', data.session_id);
                 } else alert("Invalid username or password.");
             });
         }
@@ -179,6 +187,20 @@
                     else alert("Failed to remove user. Please try again.");
                 });
             }
+        }
+        
+        function logout() {
+            sessionStorage.removeItem('sessionId');
+            fetch(`${baseURL}/logout`)
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    window.location.reload(); // Reload the page after logout
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Failed to logout.");
+                });
         }
     </script>
 </body>
